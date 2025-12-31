@@ -15,68 +15,77 @@ export const ACHIEVEMENTS = [
 ];
 
 // 检查是否解锁成就
-export function checkAchievements(session, allSessions) {
+export function checkAchievements (session, allSessions) {
   const unlocked = [];
   const today = new Date().toDateString();
   const todaySessions = allSessions.filter(s => new Date(s.endTime).toDateString() === today);
   const totalCount = allSessions.length;
-  
-  // 首次专注
+
+  // 首次专注 (只要完成任意一次有效专注即可)
   if (totalCount === 1) unlocked.push('first_focus');
-  
+
   // 深夜/清晨
   const hour = new Date(session.endTime).getHours();
   if (hour >= 23 || hour < 5) unlocked.push('night_owl');
   if (hour >= 5 && hour < 8) unlocked.push('early_bird');
-  
+
   // 周末
   const day = new Date(session.endTime).getDay();
   if (day === 0 || day === 6) unlocked.push('weekend');
-  
+
   // 单日8个
   if (todaySessions.length === 8) unlocked.push('marathon');
   // 单日12个
   if (todaySessions.length === 12) unlocked.push('perfect_day');
-  
+
   // 世纪专注
   if (totalCount === 100) unlocked.push('century');
-  
+
   // 深夜/清晨10次
   const nightCount = allSessions.filter(s => {
     const h = new Date(s.endTime).getHours();
     return h >= 23 || h < 5;
   }).length;
   if (nightCount === 10) unlocked.push('night_10');
-  
+
   const morningCount = allSessions.filter(s => {
     const h = new Date(s.endTime).getHours();
     return h >= 5 && h < 8;
   }).length;
   if (morningCount === 10) unlocked.push('morning_10');
-  
+
+  // 连胜检查
+  // 使用 allSessions 而不是 sessions，因为 sessions 是传入的参数名，但 calculateStreak 需要所有会话
+  const streak = calculateStreak(allSessions);
+  if (streak >= 3) unlocked.push('streak_3');
+  if (streak >= 7) unlocked.push('streak_7');
+
   return unlocked;
 }
 
 // 计算连续天数
-export function calculateStreak(sessions) {
+export function calculateStreak (sessions) {
   if (!sessions.length) return 0;
-  
+
+  // 计算连续天数（优化版，解决跨月/跨年计算问题）
   const dates = sessions
-    .map(s => new Date(s.endTime).toDateString())
+    .map(s => new Date(s.endTime).setHours(0, 0, 0, 0)) // 转换为当日零点时间戳
     .filter((v, i, a) => a.indexOf(v) === i) // 去重
-    .sort((a, b) => new Date(b) - new Date(a));
-  
+    .sort((a, b) => b - a); // 降序排列
+
   let streak = 0;
-  const today = new Date().toDateString();
-  const yesterday = new Date(Date.now() - 86400000).toDateString();
-  
-  // 检查今天或昨天是否完成
+  const today = new Date().setHours(0, 0, 0, 0);
+  const yesterday = today - 86400000;
+
+  // 检查今天或昨天是否完成（允许今天还没做，但昨天做了也算延续中）
   if (dates[0] === today || dates[0] === yesterday) {
     streak = 1;
     for (let i = 1; i < dates.length; i++) {
-      const prevDate = new Date(dates[i-1]);
-      const currDate = new Date(dates[i]);
-      const diffDays = (prevDate - currDate) / 86400000;
+      const prevDate = dates[i - 1];
+      const currDate = dates[i];
+      // 计算两个日期的时间戳差值是否约为24小时（考虑夏令时可能有偏差，取整天数）
+      const diffDays = Math.round((prevDate - currDate) / 86400000);
+
       if (diffDays === 1) {
         streak++;
       } else {
@@ -84,6 +93,6 @@ export function calculateStreak(sessions) {
       }
     }
   }
-  
+
   return streak;
 }

@@ -4,15 +4,71 @@ import { useLanguage } from '../context/LanguageContext';
 import { AchievementManager } from './AchievementManager';
 import { ShareCard } from './ShareCard';
 import { clsx } from 'clsx';
+import { RotateCcw, Play, Pause } from 'lucide-preact';
 
 export function Timer() {
   const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [isActive, setIsActive] = useState(false);
-  const [mode, setMode] = useState('focus'); // 'focus' | 'shortBreak' | 'longBreak'
+  const [mode, setMode] = useState('focus'); // 'focus' | 'shortBreak' | 'longBreak' | 'custom'
+  const [customDuration, setCustomDuration] = useState(30); // minutes
   const [completedSession, setCompletedSession] = useState(null);
   const [showShareCard, setShowShareCard] = useState(false);
-  const { currentTheme } = useTheme();
+  const { currentTheme, theme } = useTheme();
   const { t } = useLanguage();
+
+  // 定义每个主题对应的具体样式类名，确保 Tailwind 能正确生成 CSS
+  const themeStyles = {
+    default: {
+      gradient: 'bg-gradient-to-b from-indigo-500/50 to-indigo-700/80',
+      waveMain: 'text-indigo-500',
+      waveMid: 'text-indigo-400',
+      waveLight: 'text-indigo-300',
+      bubble: 'bg-indigo-200',
+      pulse: 'from-indigo-400/20',
+      btnBg: 'bg-indigo-500 hover:bg-indigo-400 shadow-indigo-500/30',
+      btnActive: 'bg-indigo-600',
+      progress: 'bg-indigo-500',
+      waveFill: 'bg-indigo-500/20'
+    },
+    forest: {
+      gradient: 'bg-gradient-to-b from-emerald-500/50 to-emerald-700/80',
+      waveMain: 'text-emerald-500',
+      waveMid: 'text-emerald-400',
+      waveLight: 'text-emerald-300',
+      bubble: 'bg-emerald-200',
+      pulse: 'from-emerald-400/20',
+      btnBg: 'bg-emerald-500 hover:bg-emerald-400 shadow-emerald-500/30',
+      btnActive: 'bg-emerald-600',
+      progress: 'bg-emerald-500',
+      waveFill: 'bg-emerald-500/20'
+    },
+    sunset: {
+      gradient: 'bg-gradient-to-b from-orange-500/50 to-orange-700/80',
+      waveMain: 'text-orange-500',
+      waveMid: 'text-orange-400',
+      waveLight: 'text-orange-300',
+      bubble: 'bg-orange-200',
+      pulse: 'from-orange-400/20',
+      btnBg: 'bg-orange-500 hover:bg-orange-400 shadow-orange-500/30',
+      btnActive: 'bg-orange-600',
+      progress: 'bg-orange-500',
+      waveFill: 'bg-orange-500/20'
+    },
+    ocean: {
+      gradient: 'bg-gradient-to-b from-cyan-500/50 to-cyan-700/80',
+      waveMain: 'text-cyan-500',
+      waveMid: 'text-cyan-400',
+      waveLight: 'text-cyan-300',
+      bubble: 'bg-cyan-200',
+      pulse: 'from-cyan-400/20',
+      btnBg: 'bg-cyan-500 hover:bg-cyan-400 shadow-cyan-500/30',
+      btnActive: 'bg-cyan-600',
+      progress: 'bg-cyan-500',
+      waveFill: 'bg-cyan-500/20'
+    }
+  };
+
+  const currentStyles = themeStyles[theme] || themeStyles.default;
 
   useEffect(() => {
     let interval = null;
@@ -25,7 +81,7 @@ export function Timer() {
       // 记录完成的会话
       const session = {
         id: Date.now(),
-        duration: mode === 'focus' ? 25 * 60 : mode === 'shortBreak' ? 5 * 60 : 15 * 60,
+        duration: mode === 'focus' ? 25 * 60 : mode === 'shortBreak' ? 5 * 60 : mode === 'longBreak' ? 15 * 60 : customDuration * 60,
         endTime: new Date().toISOString(),
         mode: mode
       };
@@ -39,6 +95,12 @@ export function Timer() {
 
       // 播放完成音效
       playCompleteSound();
+
+      // 计时结束后重置时间，防止用户在未重置的情况下切换模式导致状态混乱
+      if (mode === 'focus') setTimeLeft(25 * 60);
+      else if (mode === 'shortBreak') setTimeLeft(5 * 60);
+      else if (mode === 'longBreak') setTimeLeft(15 * 60);
+      else setTimeLeft(customDuration * 60);
     }
     return () => clearInterval(interval);
   }, [isActive, timeLeft, mode]);
@@ -51,15 +113,24 @@ export function Timer() {
     setIsActive(false);
     if (mode === 'focus') setTimeLeft(25 * 60);
     else if (mode === 'shortBreak') setTimeLeft(5 * 60);
-    else setTimeLeft(15 * 60);
+    else if (mode === 'longBreak') setTimeLeft(15 * 60);
+    else setTimeLeft(customDuration * 60);
   };
 
   const switchMode = (newMode) => {
+    // 如果已经在该模式下，不做任何操作
+    if (mode === newMode) return;
+
     setMode(newMode);
     setIsActive(false);
     if (newMode === 'focus') setTimeLeft(25 * 60);
     else if (newMode === 'shortBreak') setTimeLeft(5 * 60);
-    else setTimeLeft(15 * 60);
+    else if (newMode === 'longBreak') setTimeLeft(15 * 60);
+    else setTimeLeft(customDuration * 60);
+
+    // 切换模式时，如果之前有完成的会话弹窗，关闭它
+    setCompletedSession(null);
+    setShowShareCard(false);
   };
 
   const formatTime = (seconds) => {
@@ -72,7 +143,9 @@ export function Timer() {
     ? ((25 * 60 - timeLeft) / (25 * 60)) * 100
     : mode === 'shortBreak'
       ? ((5 * 60 - timeLeft) / (5 * 60)) * 100
-      : ((15 * 60 - timeLeft) / (15 * 60)) * 100;
+      : mode === 'longBreak'
+        ? ((15 * 60 - timeLeft) / (15 * 60)) * 100
+        : ((customDuration * 60 - timeLeft) / (customDuration * 60)) * 100;
 
   const playCompleteSound = () => {
     // 简单的完成音效
@@ -110,84 +183,75 @@ export function Timer() {
     <div className={clsx("flex flex-col items-center justify-center p-8 rounded-2xl shadow-xl relative overflow-hidden transition-colors", currentTheme.colors.card)}>
       {/* 动态背景进度效果 */}
       <div className="absolute inset-0 rounded-2xl overflow-hidden">
-        {/* 渐变填充背景 */}
+        {/* 液体波浪效果 */}
         <div
-          className={clsx("absolute bottom-0 left-0 w-full transition-all duration-1000 ease-out", `bg-gradient-to-t from-${currentTheme.colors.primary}-600/30 to-transparent`)}
+          className="absolute bottom-0 left-0 w-full transition-all duration-1000 ease-out"
           style={{
             height: `${progress}%`,
-            transform: `translateY(${100 - progress}%)`,
-            transition: 'height 1s ease-out, transform 1s ease-out'
+            transition: 'height 1s ease-out',
+            opacity: progress > 0 ? 1 : 0
           }}
-        />
+        >
+          {/* 多层液体波浪 */}
+          <svg className="absolute top-0 left-0 w-[200%] h-16" viewBox="0 0 1200 80" preserveAspectRatio="none" style={{ transform: 'translateY(-50%) translateX(-25%)' }}>
+            {/* 主波浪层 */}
+            <path
+              d="M0,40 Q200,10 400,40 T800,40 Q1000,70 1200,40 L1200,80 L0,80 Z"
+              className={clsx("fill-current opacity-60", currentStyles.waveMain)}
+              style={{
+                animation: 'liquidWave 3s ease-in-out infinite',
+                transformOrigin: 'center'
+              }}
+            />
+            {/* 中层波浪 */}
+            <path
+              d="M0,50 Q300,20 600,50 T1000,50 Q1100,75 1200,50 L1200,80 L0,80 Z"
+              className={clsx("fill-current opacity-40", currentStyles.waveMid)}
+              style={{
+                animation: 'liquidWave 4s ease-in-out infinite reverse',
+                transformOrigin: 'center',
+                animationDelay: '0.5s'
+              }}
+            />
+            {/* 细腻波浪 */}
+            <path
+              d="M0,60 Q400,45 800,60 T1200,60 L1200,80 L0,80 Z"
+              className={clsx("fill-current opacity-25", currentStyles.waveLight)}
+              style={{
+                animation: 'liquidWave 5s ease-in-out infinite',
+                transformOrigin: 'center',
+                animationDelay: '1s'
+              }}
+            />
+          </svg>
 
-        {/* 液体波浪效果 */}
-        {isActive && (
-          <div
-            className="absolute bottom-0 left-0 w-full transition-all duration-1000 ease-out"
-            style={{
-              height: `${progress}%`,
-              transform: `translateY(${100 - progress}%)`,
-              transition: 'height 1s ease-out, transform 1s ease-out'
-            }}
-          >
-            {/* 多层液体波浪 */}
-            <svg className="absolute top-0 left-0 w-full h-12" viewBox="0 0 1200 80" preserveAspectRatio="none">
-              {/* 主波浪层 */}
-              <path
-                d="M0,40 Q200,10 400,40 T800,40 Q1000,70 1200,40 L1200,80 L0,80 Z"
-                className={clsx("fill-current opacity-60", `text-${currentTheme.colors.primary}-500`)}
-                style={{
-                  animation: 'liquidWave 3s ease-in-out infinite',
-                  transformOrigin: 'center'
-                }}
-              />
-              {/* 中层波浪 */}
-              <path
-                d="M0,50 Q300,20 600,50 T1000,50 Q1100,75 1200,50 L1200,80 L0,80 Z"
-                className={clsx("fill-current opacity-40", `text-${currentTheme.colors.primary}-400`)}
-                style={{
-                  animation: 'liquidWave 4s ease-in-out infinite reverse',
-                  transformOrigin: 'center',
-                  animationDelay: '0.5s'
-                }}
-              />
-              {/* 细腻波浪 */}
-              <path
-                d="M0,60 Q400,45 800,60 T1200,60 L1200,80 L0,80 Z"
-                className={clsx("fill-current opacity-25", `text-${currentTheme.colors.primary}-300`)}
-                style={{
-                  animation: 'liquidWave 5s ease-in-out infinite',
-                  transformOrigin: 'center',
-                  animationDelay: '1s'
-                }}
-              />
-            </svg>
-
+          {/* 深海背景填充 - 增强颜色标记 */}
+          <div className={clsx("absolute top-0 left-0 w-full h-full", currentStyles.gradient)} >
             {/* 动态气泡效果 */}
             <div className="absolute inset-0 overflow-hidden">
-              {[...Array(6)].map((_, i) => (
+              {isActive && [...Array(8)].map((_, i) => (
                 <div
                   key={i}
-                  className={clsx("absolute rounded-full opacity-0 transition-opacity duration-1000", `bg-${currentTheme.colors.primary}-200`)}
+                  className={clsx("absolute rounded-full opacity-0 transition-opacity duration-1000", currentStyles.bubble)}
                   style={{
                     width: `${4 + Math.random() * 6}px`,
                     height: `${4 + Math.random() * 6}px`,
-                    left: `${15 + i * 14}%`,
-                    bottom: `${10 + Math.sin(Date.now() / 1500 + i) * 20}%`,
+                    left: `${10 + i * 12}%`,
+                    bottom: `${-20 + Math.random() * 40}%`,
                     animation: `bubble ${4 + Math.random() * 3}s ease-in-out infinite`,
-                    animationDelay: `${i * 0.6}s`,
-                    opacity: progress > 15 ? 0.8 : 0
+                    animationDelay: `${i * 0.5}s`,
+                    opacity: progress > 5 ? 0.6 : 0
                   }}
                 />
               ))}
             </div>
           </div>
-        )}
+        </div>
 
         {/* 脉冲光晕效果 */}
         {isActive && (
           <div
-            className={clsx("absolute bottom-0 left-0 w-full transition-all duration-1000 ease-out opacity-30", `bg-gradient-to-t from-${currentTheme.colors.primary}-400/20 to-transparent`)}
+            className={clsx("absolute bottom-0 left-0 w-full transition-all duration-1000 ease-out opacity-30", `bg-gradient-to-t ${currentStyles.pulse} to-transparent`)}
             style={{
               height: `${progress * 1.2}%`,
               transform: `translateY(${100 - progress * 1.2}%)`,
@@ -216,7 +280,7 @@ export function Timer() {
 
       {/* 顶部进度指示器 */}
       <div
-        className={clsx("absolute top-0 left-0 h-1 transition-all duration-1000 ease-linear z-10", `bg-${currentTheme.colors.primary}-500`)}
+        className={clsx("absolute top-0 left-0 h-1 transition-all duration-1000 ease-linear z-10", currentStyles.progress)}
         style={{ width: `${progress}%` }}
       />
 
@@ -226,7 +290,7 @@ export function Timer() {
           onClick={() => switchMode('focus')}
           className={clsx(
             "px-4 py-2 rounded-md text-sm font-medium transition-all",
-            mode === 'focus' ? `bg-${currentTheme.colors.primary}-600 text-white shadow-lg` : "opacity-60 hover:opacity-100"
+            mode === 'focus' ? `${currentStyles.btnActive} text-white shadow-lg` : "opacity-60 hover:opacity-100"
           )}
         >
           {t('Focus')}
@@ -235,7 +299,7 @@ export function Timer() {
           onClick={() => switchMode('shortBreak')}
           className={clsx(
             "px-4 py-2 rounded-md text-sm font-medium transition-all",
-            mode === 'shortBreak' ? `bg-${currentTheme.colors.primary}-600 text-white shadow-lg` : "opacity-60 hover:opacity-100"
+            mode === 'shortBreak' ? `${currentStyles.btnActive} text-white shadow-lg` : "opacity-60 hover:opacity-100"
           )}
         >
           {t('Short Break')}
@@ -244,16 +308,47 @@ export function Timer() {
           onClick={() => switchMode('longBreak')}
           className={clsx(
             "px-4 py-2 rounded-md text-sm font-medium transition-all",
-            mode === 'longBreak' ? `bg-${currentTheme.colors.primary}-600 text-white shadow-lg` : "opacity-60 hover:opacity-100"
+            mode === 'longBreak' ? `${currentStyles.btnActive} text-white shadow-lg` : "opacity-60 hover:opacity-100"
           )}
         >
           {t('Long Break')}
         </button>
+        <button
+          onClick={() => switchMode('custom')}
+          className={clsx(
+            "px-4 py-2 rounded-md text-sm font-medium transition-all",
+            mode === 'custom' ? `${currentStyles.btnActive} text-white shadow-lg` : "opacity-60 hover:opacity-100"
+          )}
+        >
+          {t('Custom')}
+        </button>
       </div>
 
       {/* 时间显示 */}
-      <div className="text-8xl font-bold font-mono tracking-wider mb-8 tabular-nums relative z-20">
-        {formatTime(timeLeft)}
+      <div className="relative mb-8 z-20">
+        {mode === 'custom' && !isActive ? (
+          <div className="flex items-center justify-center">
+            <input
+              type="number"
+              min="1"
+              max="120"
+              value={customDuration}
+              onInput={(e) => {
+                let val = parseInt(e.target.value);
+                if (isNaN(val) || val < 1) val = 1;
+                if (val > 120) val = 120;
+                setCustomDuration(val);
+                setTimeLeft(val * 60);
+              }}
+              className="text-8xl font-bold font-mono tracking-wider bg-transparent text-center w-64 focus:outline-none border-b-2 border-white/20 hover:border-white/50 transition-colors"
+            />
+            <span className="text-xl opacity-60 ml-2 mt-8 font-medium">min</span>
+          </div>
+        ) : (
+          <div className="text-8xl font-bold font-mono tracking-wider tabular-nums">
+            {formatTime(timeLeft)}
+          </div>
+        )}
       </div>
 
       {/* 控制按钮 */}
@@ -262,17 +357,13 @@ export function Timer() {
           onClick={toggleTimer}
           className={clsx(
             "w-16 h-16 flex items-center justify-center rounded-full text-white shadow-lg transition-all hover:scale-105 active:scale-95",
-            `bg-${currentTheme.colors.primary}-500 hover:bg-${currentTheme.colors.primary}-400 shadow-${currentTheme.colors.primary}-500/30`
+            currentStyles.btnBg
           )}
         >
           {isActive ? (
-            <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
-            </svg>
+            <Pause className="w-8 h-8 fill-current" />
           ) : (
-            <svg className="w-8 h-8 ml-1" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z"/>
-            </svg>
+            <Play className="w-8 h-8 ml-1 fill-current" />
           )}
         </button>
         <button
@@ -280,9 +371,7 @@ export function Timer() {
           className="w-16 h-16 flex items-center justify-center rounded-full bg-gray-700 hover:bg-gray-600 text-white transition-all hover:scale-105 active:scale-95"
           title={t('Reset')}
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0A9.003 9.003 0 007 4.581"/>
-          </svg>
+          <RotateCcw className="w-6 h-6" />
         </button>
       </div>
 

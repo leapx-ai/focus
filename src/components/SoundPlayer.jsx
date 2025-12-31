@@ -4,49 +4,51 @@ import { clsx } from 'clsx';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 
-// 白噪音配置 - 使用CDN链接避免GitHub Pages路径问题
+// 获取音频文件的完整路径
+const getAudioUrl = (path) => {
+  // 移除开头的斜杠（如果有）
+  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+  // 使用 import.meta.env.BASE_URL 确保在不同部署路径下都能正确加载
+  // 如果 BASE_URL 是 ./，则结果为 ./filename.mp3
+  return `${import.meta.env.BASE_URL}${cleanPath}`;
+};
+
 const SOUNDS = [
   {
     id: 'rain',
     name: '雨声',
     icon: CloudRain,
-    src: 'https://cdn.freesound.org/previews/257/257596_4284968-lq.mp3',
-    fallback: '/calming-rain-257596.mp3'
+    src: 'calming-rain-257596.mp3'
   },
   {
     id: 'fire',
     name: '篝火',
     icon: Flame,
-    src: 'https://cdn.freesound.org/previews/427/427410_5123451-lq.mp3',
-    fallback: '/fire-crackling-sounds-427410.mp3'
+    src: 'fire-crackling-sounds-427410.mp3'
   },
   {
     id: 'cafe',
     name: '咖啡厅',
     icon: Coffee,
-    src: 'https://cdn.freesound.org/previews/329/32940_378958-lq.mp3',
-    fallback: '/cafe-noise-32940.mp3'
+    src: 'cafe-noise-32940.mp3'
   },
   {
     id: 'ocean',
     name: '海浪',
     icon: Waves,
-    src: 'https://cdn.freesound.org/previews/376/376898_6894687-lq.mp3',
-    fallback: '/ocean-waves-376898.mp3'
+    src: 'ocean-waves-376898.mp3'
   },
   {
     id: 'white',
     name: '白噪音',
     icon: Zap,
-    src: 'https://cdn.freesound.org/previews/372/372485_8156958-lq.mp3',
-    fallback: '/whitenoise-372485.mp3'
+    src: 'whitenoise-372485.mp3'
   },
   {
     id: 'uplifting',
     name: '舒缓音',
     icon: Music,
-    src: 'https://cdn.freesound.org/previews/113/113842_2199326-lq.mp3',
-    fallback: '/uplifting-pad-texture-113842.mp3'
+    src: 'uplifting-pad-texture-113842.mp3'
   }
 ];
 
@@ -66,8 +68,24 @@ export function SoundPlayer() {
       audio.loop = true;
       audio.preload = 'none'; // 不预加载，节省资源
 
-      // 先尝试CDN链接
-      loadAudioWithFallback(audio, sound.src, sound.fallback, sound.id, sound.name);
+      const audioSrc = getAudioUrl(sound.src);
+      audio.src = audioSrc;
+
+      // 测试音频是否可用
+      fetch(audioSrc, { method: 'HEAD' })
+        .then(response => {
+          if (response.ok) {
+            console.log(`✅ 音频文件可用: ${sound.name}`);
+            setAudioStatus(prev => ({ ...prev, [sound.id]: 'available' }));
+          } else {
+            console.error(`❌ 音频文件不可用: ${sound.name} (${response.status})`);
+            setAudioStatus(prev => ({ ...prev, [sound.id]: 'missing' }));
+          }
+        })
+        .catch(error => {
+          console.error(`❌ 网络错误: ${sound.name}`, error);
+          setAudioStatus(prev => ({ ...prev, [sound.id]: 'error' }));
+        });
 
       // 音频事件监听
       audio.addEventListener('loadeddata', () => {
@@ -101,38 +119,6 @@ export function SoundPlayer() {
     };
   }, []);
 
-  // 带fallback的音频加载函数
-  const loadAudioWithFallback = async (audio, primarySrc, fallbackSrc, id, name) => {
-    try {
-      // 首先尝试CDN链接
-      const response = await fetch(primarySrc, { method: 'HEAD', mode: 'no-cors' });
-      if (response.ok || response.type === 'opaque') {
-        console.log(`✅ CDN音频可用: ${name}`);
-        audio.src = primarySrc;
-        setAudioStatus(prev => ({ ...prev, [id]: 'available' }));
-        return;
-      }
-    } catch (error) {
-      console.log(`🔄 CDN音频失败，尝试本地文件: ${name}`);
-    }
-
-    // CDN失败，尝试本地文件
-    try {
-      const response = await fetch(fallbackSrc, { method: 'HEAD' });
-      if (response.ok) {
-        console.log(`✅ 本地音频可用: ${name}`);
-        audio.src = fallbackSrc;
-        setAudioStatus(prev => ({ ...prev, [id]: 'available' }));
-      } else {
-        console.error(`❌ 本地音频也不可用: ${name} (${response.status})`);
-        setAudioStatus(prev => ({ ...prev, [id]: 'missing' }));
-      }
-    } catch (error) {
-      console.error(`❌ 音频加载失败: ${name}`, error);
-      setAudioStatus(prev => ({ ...prev, [id]: 'error' }));
-    }
-  };
-
   useEffect(() => {
     Object.values(audioRefs.current).forEach(audio => {
       if (audio) audio.volume = volume;
@@ -164,15 +150,6 @@ export function SoundPlayer() {
       // 播放新音频
       try {
         console.log(`🎯 尝试播放: ${SOUNDS.find(s => s.id === id)?.name}`);
-
-        // 如果音频没有src，先设置
-        if (!audio.src) {
-          const sound = SOUNDS.find(s => s.id === id);
-          if (sound) {
-            // 重新尝试加载音频
-            await loadAudioWithFallback(audio, sound.src, sound.fallback, sound.id, sound.name);
-          }
-        }
 
         await audio.play();
         setPlaying(id);

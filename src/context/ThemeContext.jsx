@@ -7,11 +7,11 @@ export const THEMES = {
   default: {
     name: 'Midnight',
     colors: {
-      bg: 'bg-gray-900',
-      text: 'text-gray-100',
+      bg: 'bg-indigo-950',
+      text: 'text-indigo-50',
       primary: 'indigo', // used for dynamic classes like bg-indigo-500
-      sidebar: 'bg-gray-900/50',
-      card: 'bg-gray-800'
+      sidebar: 'bg-indigo-950/50',
+      card: 'bg-indigo-900'
     }
   },
   forest: {
@@ -27,11 +27,11 @@ export const THEMES = {
   sunset: {
     name: 'Sunset',
     colors: {
-      bg: 'bg-slate-900',
+      bg: 'bg-orange-950',
       text: 'text-orange-50',
       primary: 'orange',
-      sidebar: 'bg-slate-900/50',
-      card: 'bg-slate-800'
+      sidebar: 'bg-orange-950/50',
+      card: 'bg-orange-900'
     }
   },
   ocean: {

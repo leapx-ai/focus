@@ -7,7 +7,7 @@ import { StatsPanel } from './StatsPanel';
 export function StatsModal() {
   const [isOpen, setIsOpen] = useState(false);
   const { currentTheme } = useTheme();
-  
+
   return (
     <>
       {/* 统计按钮 */}
@@ -22,7 +22,7 @@ export function StatsModal() {
       >
         <BarChart3 size={24} className="animate-pulse" />
       </button>
-      
+
       {/* 统计弹窗 */}
       {isOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in p-4">
@@ -32,7 +32,10 @@ export function StatsModal() {
             "border border-white/10 shadow-2xl"
           )}>
             <div className="sticky top-0 p-6 border-b border-white/10 flex items-center justify-between bg-gradient-to-r from-black/20 to-transparent">
-              <h2 className="text-2xl font-bold text-gradient">📊 数据统计</h2>
+              <div className="flex items-center gap-3">
+                <BarChart3 size={28} className={`text-${currentTheme.colors.primary}-400`} />
+                <h2 className="text-2xl font-bold text-gradient">数据统计</h2>
+              </div>
               <button
                 onClick={() => setIsOpen(false)}
                 className="opacity-60 hover:opacity-100 transition-opacity hover:rotate-90 transform p-2"
@@ -40,7 +43,7 @@ export function StatsModal() {
                 <X size={24} />
               </button>
             </div>
-            
+
             <div className="p-6">
               <StatsPanel />
             </div>

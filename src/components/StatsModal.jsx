@@ -27,7 +27,7 @@ export function StatsModal() {
       {isOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in p-4">
           <div className={clsx(
-            "rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto transform animate-bounce-in",
+            "rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto transform animate-bounce-in",
             currentTheme.colors.card,
             "border border-white/10 shadow-2xl"
           )}>

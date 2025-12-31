@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useMemo } from 'preact/hooks';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { AchievementManager } from './AchievementManager';
@@ -69,6 +69,19 @@ export function Timer() {
   };
 
   const currentStyles = themeStyles[theme] || themeStyles.default;
+
+  // 生成稳定的气泡配置，避免重渲染时跳动
+  const bubbles = useMemo(() => {
+    return Array.from({ length: 15 }).map((_, i) => ({
+      id: i,
+      size: 4 + Math.random() * 8, // 4-12px
+      left: 5 + Math.random() * 90, // 5-95%
+      duration: 8 + Math.random() * 12, // 8-20s (更慢更自然)
+      delay: Math.random() * 10, // 0-10s 延迟，错落有致
+      swayDuration: 3 + Math.random() * 4, // 3-7s 摆动周期
+      opacity: 0.3 + Math.random() * 0.4 // 0.3-0.7 透明度
+    }));
+  }, []);
 
   useEffect(() => {
     let interval = null;
@@ -227,20 +240,22 @@ export function Timer() {
 
           {/* 深海背景填充 - 增强颜色标记 */}
           <div className={clsx("absolute top-0 left-0 w-full h-full", currentStyles.gradient)} >
-            {/* 动态气泡效果 */}
-            <div className="absolute inset-0 overflow-hidden">
-              {isActive && [...Array(8)].map((_, i) => (
+            {/* 动态气泡效果 - 优化版 */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              {bubbles.map((bubble) => (
                 <div
-                  key={i}
-                  className={clsx("absolute rounded-full opacity-0 transition-opacity duration-1000", currentStyles.bubble)}
+                  key={bubble.id}
+                  className={clsx("absolute rounded-full", currentStyles.bubble)}
                   style={{
-                    width: `${4 + Math.random() * 6}px`,
-                    height: `${4 + Math.random() * 6}px`,
-                    left: `${10 + i * 12}%`,
-                    bottom: `${-20 + Math.random() * 40}%`,
-                    animation: `bubble ${4 + Math.random() * 3}s ease-in-out infinite`,
-                    animationDelay: `${i * 0.5}s`,
-                    opacity: progress > 5 ? 0.6 : 0
+                    width: `${bubble.size}px`,
+                    height: `${bubble.size}px`,
+                    left: `${bubble.left}%`,
+                    bottom: '-20px',
+                    opacity: 0, // 初始透明，通过动画控制显示
+                    '--bubble-opacity': bubble.opacity,
+                    animation: `bubbleRise ${bubble.duration}s infinite linear, sway ${bubble.swayDuration}s infinite ease-in-out alternate`,
+                    animationDelay: `${bubble.delay}s`,
+                    animationPlayState: isActive ? 'running' : 'paused'
                   }}
                 />
               ))}
@@ -392,22 +407,33 @@ export function Timer() {
           }
         }
 
-        @keyframes bubble {
+        @keyframes bubbleRise {
           0% {
-            transform: translateY(0px) scale(0.8);
+            bottom: -20px;
             opacity: 0;
+            transform: scale(0.8);
           }
-          20% {
-            opacity: 0.8;
+          10% {
+            opacity: var(--bubble-opacity, 0.6);
             transform: scale(1);
           }
-          80% {
-            opacity: 0.6;
-            transform: translateY(-30px) scale(0.9);
+          90% {
+            opacity: var(--bubble-opacity, 0.6);
+            transform: scale(1);
           }
           100% {
-            transform: translateY(-40px) scale(0.7);
+            bottom: 120%;
             opacity: 0;
+            transform: scale(1.2);
+          }
+        }
+
+        @keyframes sway {
+          0% {
+            margin-left: -5px;
+          }
+          100% {
+            margin-left: 5px;
           }
         }
 

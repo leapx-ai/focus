@@ -226,9 +226,9 @@ export function StatsPanel() {
       </div>
       
       {/* 图表 */}
-      <div className="mb-4">
+      <div className="mb-4 w-full">
         <h3 className="text-lg font-semibold mb-3">近7天趋势</h3>
-        <div className="h-64">
+        <div className="h-64 w-full bg-black/10 rounded-xl p-4">
           <Line data={chartData} options={chartOptions} />
         </div>
       </div>

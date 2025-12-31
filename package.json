@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -24,11 +27,8 @@
     "autoprefixer": "^10.4.23",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
-    "vite": "npm:rolldown-vite@7.2.5",
+    "vite": "^5.0.0",
     "vite-plugin-pwa": "^1.2.0",
     "workbox-window": "^7.4.0"
-  },
-  "overrides": {
-    "vite": "npm:rolldown-vite@7.2.5"
   }
 }

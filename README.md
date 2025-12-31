@@ -164,6 +164,61 @@ npm run build
 ### 成就配置
 在 `src/hooks/useAchievements.js` 中可以定义新的成就条件
 
+## 🚀 GitHub Actions 自动部署
+
+本项目已经配置了完整的 GitHub Actions 工作流，支持自动部署到 GitHub Pages。
+
+### 部署配置说明
+
+#### 工作流文件位置
+`.github/workflows/deploy.yml`
+
+#### 触发条件
+- 推送到 `main` 分支
+- 手动触发（通过 GitHub 界面）
+
+#### 构建环境
+- **Node.js**: 18.x
+- **构建命令**: `npm install && npm run build`
+- **输出目录**: `./dist`
+
+#### 部署步骤
+1. **代码检出**: 使用最新代码
+2. **环境配置**: 设置 Node.js 和 npm 缓存
+3. **依赖安装**: 安装项目依赖
+4. **项目构建**: 构建生产版本
+5. **页面部署**: 自动部署到 GitHub Pages
+
+### 手动部署步骤
+
+如果自动部署遇到问题，可以手动部署：
+
+```bash
+# 1. 本地构建
+npm install
+npm run build
+
+# 2. 上传 dist 文件夹到 GitHub Pages
+# 进入 GitHub 仓库 → Settings → Pages → 上传 dist 文件夹内容
+```
+
+### 常见问题排查
+
+#### 构建失败
+1. 检查 Node.js 版本（推荐 18.x）
+2. 清除 npm 缓存：`npm cache clean --force`
+3. 删除 `node_modules` 和 `package-lock.json` 后重新安装
+
+#### 白噪音文件加载失败
+1. 检查网络连接
+2. 确认 CDN 链接可访问
+3. 查看浏览器控制台错误信息
+
+#### 页面空白或资源加载失败
+1. 检查 `base: './'` 配置是否正确
+2. 确认所有文件都已正确上传到 Pages
+3. 检查浏览器控制台网络请求
+
 ## 🤝 贡献指南
 
 欢迎提交 Issue 和 Pull Request！

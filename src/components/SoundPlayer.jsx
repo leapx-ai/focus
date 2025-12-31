@@ -4,13 +4,50 @@ import { clsx } from 'clsx';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 
+// 白噪音配置 - 使用CDN链接避免GitHub Pages路径问题
 const SOUNDS = [
-  { id: 'rain', name: '雨声', icon: CloudRain, src: '/calming-rain-257596.mp3' },
-  { id: 'fire', name: '篝火', icon: Flame, src: '/fire-crackling-sounds-427410.mp3' },
-  { id: 'cafe', name: '咖啡厅', icon: Coffee, src: '/cafe-noise-32940.mp3' },
-  { id: 'ocean', name: '海浪', icon: Waves, src: '/ocean-waves-376898.mp3' },
-  { id: 'white', name: '白噪音', icon: Zap, src: '/whitenoise-372485.mp3' },
-  { id: 'uplifting', name: '舒缓音', icon: Music, src: '/uplifting-pad-texture-113842.mp3' }
+  {
+    id: 'rain',
+    name: '雨声',
+    icon: CloudRain,
+    src: 'https://cdn.freesound.org/previews/257/257596_4284968-lq.mp3',
+    fallback: '/calming-rain-257596.mp3'
+  },
+  {
+    id: 'fire',
+    name: '篝火',
+    icon: Flame,
+    src: 'https://cdn.freesound.org/previews/427/427410_5123451-lq.mp3',
+    fallback: '/fire-crackling-sounds-427410.mp3'
+  },
+  {
+    id: 'cafe',
+    name: '咖啡厅',
+    icon: Coffee,
+    src: 'https://cdn.freesound.org/previews/329/32940_378958-lq.mp3',
+    fallback: '/cafe-noise-32940.mp3'
+  },
+  {
+    id: 'ocean',
+    name: '海浪',
+    icon: Waves,
+    src: 'https://cdn.freesound.org/previews/376/376898_6894687-lq.mp3',
+    fallback: '/ocean-waves-376898.mp3'
+  },
+  {
+    id: 'white',
+    name: '白噪音',
+    icon: Zap,
+    src: 'https://cdn.freesound.org/previews/372/372485_8156958-lq.mp3',
+    fallback: '/whitenoise-372485.mp3'
+  },
+  {
+    id: 'uplifting',
+    name: '舒缓音',
+    icon: Music,
+    src: 'https://cdn.freesound.org/previews/113/113842_2199326-lq.mp3',
+    fallback: '/uplifting-pad-texture-113842.mp3'
+  }
 ];
 
 export function SoundPlayer() {
@@ -22,28 +59,15 @@ export function SoundPlayer() {
   const { t, language } = useLanguage();
 
   useEffect(() => {
-    // 创建音频元素并测试加载
+    // 创建音频元素并尝试加载
     SOUNDS.forEach(sound => {
       const audio = new Audio();
       audio.volume = volume;
       audio.loop = true;
+      audio.preload = 'none'; // 不预加载，节省资源
 
-      // 测试文件是否存在
-      fetch(sound.src, { method: 'HEAD' })
-        .then(response => {
-          if (response.ok) {
-            console.log(`✅ 文件存在: ${sound.name}`);
-            audio.src = sound.src;
-            setAudioStatus(prev => ({ ...prev, [sound.id]: 'available' }));
-          } else {
-            console.error(`❌ 文件不存在: ${sound.name} (${response.status})`);
-            setAudioStatus(prev => ({ ...prev, [sound.id]: 'missing' }));
-          }
-        })
-        .catch(error => {
-          console.error(`❌ 网络错误: ${sound.name}`, error);
-          setAudioStatus(prev => ({ ...prev, [sound.id]: 'error' }));
-        });
+      // 先尝试CDN链接
+      loadAudioWithFallback(audio, sound.src, sound.fallback, sound.id, sound.name);
 
       // 音频事件监听
       audio.addEventListener('loadeddata', () => {
@@ -76,6 +100,38 @@ export function SoundPlayer() {
       });
     };
   }, []);
+
+  // 带fallback的音频加载函数
+  const loadAudioWithFallback = async (audio, primarySrc, fallbackSrc, id, name) => {
+    try {
+      // 首先尝试CDN链接
+      const response = await fetch(primarySrc, { method: 'HEAD', mode: 'no-cors' });
+      if (response.ok || response.type === 'opaque') {
+        console.log(`✅ CDN音频可用: ${name}`);
+        audio.src = primarySrc;
+        setAudioStatus(prev => ({ ...prev, [id]: 'available' }));
+        return;
+      }
+    } catch (error) {
+      console.log(`🔄 CDN音频失败，尝试本地文件: ${name}`);
+    }
+
+    // CDN失败，尝试本地文件
+    try {
+      const response = await fetch(fallbackSrc, { method: 'HEAD' });
+      if (response.ok) {
+        console.log(`✅ 本地音频可用: ${name}`);
+        audio.src = fallbackSrc;
+        setAudioStatus(prev => ({ ...prev, [id]: 'available' }));
+      } else {
+        console.error(`❌ 本地音频也不可用: ${name} (${response.status})`);
+        setAudioStatus(prev => ({ ...prev, [id]: 'missing' }));
+      }
+    } catch (error) {
+      console.error(`❌ 音频加载失败: ${name}`, error);
+      setAudioStatus(prev => ({ ...prev, [id]: 'error' }));
+    }
+  };
 
   useEffect(() => {
     Object.values(audioRefs.current).forEach(audio => {
@@ -113,24 +169,8 @@ export function SoundPlayer() {
         if (!audio.src) {
           const sound = SOUNDS.find(s => s.id === id);
           if (sound) {
-            audio.src = sound.src;
-            // 等待加载
-            await new Promise((resolve, reject) => {
-              const onLoaded = () => {
-                audio.removeEventListener('loadeddata', onLoaded);
-                audio.removeEventListener('error', onError);
-                resolve();
-              };
-              const onError = (e) => {
-                audio.removeEventListener('loadeddata', onLoaded);
-                audio.removeEventListener('error', onError);
-                reject(e);
-              };
-              audio.addEventListener('loadeddata', onLoaded);
-              audio.addEventListener('error', onError);
-              audio.load();
-              setTimeout(() => reject(new Error('加载超时')), 3000);
-            });
+            // 重新尝试加载音频
+            await loadAudioWithFallback(audio, sound.src, sound.fallback, sound.id, sound.name);
           }
         }
 
@@ -139,7 +179,7 @@ export function SoundPlayer() {
         console.log(`✅ 播放成功: ${SOUNDS.find(s => s.id === id)?.name}`);
       } catch (error) {
         console.error('❌ 播放失败:', error);
-        alert(`播放失败: ${error.message}. 请检查音频文件是否存在。`);
+        alert(`播放失败: ${error.message}. 请检查网络连接或音频文件。`);
       }
     }
   };
@@ -213,6 +253,16 @@ export function SoundPlayer() {
       <div className="mt-2 text-xs text-gray-400 text-center">
         {language === 'zh' ? '点击按钮播放白噪音，再次点击停止' : 'Click to play ambience, click again to stop'}
       </div>
+
+      {/* 网络状态提示 */}
+      {Object.values(audioStatus).some(status => status === 'error' || status === 'missing') && (
+        <div className="mt-2 text-xs text-yellow-400 text-center bg-yellow-900/20 p-2 rounded">
+          {language === 'zh'
+            ? '⚠️ 部分音频加载失败，请检查网络连接'
+            : '⚠️ Some audio files failed to load, please check network connection'
+          }
+        </div>
+      )}
     </div>
   );
 }

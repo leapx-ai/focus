@@ -21,7 +21,7 @@ export function Layout({ children }) {
             <Github size={20} />
           </a>
         </header>
-        
+
         <div className="flex-1">
           {children}
         </div>
@@ -30,7 +30,7 @@ export function Layout({ children }) {
           <p>© 2024 Focus App. {t('Stay Productive')}.</p>
         </footer>
       </main>
-      
+
       <aside className={clsx("w-full md:w-80 border-t md:border-t-0 md:border-l border-gray-800/30 p-6 flex flex-col gap-8 transition-colors", currentTheme.colors.sidebar)}>
          {/* Theme Switcher */}
          <div>
@@ -51,7 +51,7 @@ export function Layout({ children }) {
                         if (themeKey === 'ocean') bgColorClass = 'bg-cyan-500';
 
                         return (
-                             <button 
+                             <button
                                 key={themeKey}
                                 onClick={() => setTheme(themeKey)}
                                 className={clsx(

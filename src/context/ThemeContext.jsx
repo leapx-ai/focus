@@ -60,7 +60,7 @@ export function ThemeProvider({ children }) {
     localStorage.setItem('focus-theme', theme);
     // Update body class for global background
     const themeConfig = THEMES[theme];
-    
+
     // Remove old theme classes from body
     Object.values(THEMES).forEach(t => {
        document.body.classList.remove(t.colors.bg);

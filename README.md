@@ -25,7 +25,7 @@ git clone https://github.com/leapx-ai/focus.git
 cd focus
 
 # 安装依赖
-npm install
+npm install --legacy-peer-deps
 
 # 启动开发服务器
 npm run dev
@@ -36,4 +36,4 @@ npm run dev
 本项目已配置 GitHub Actions，推送到 `main` 分支即可自动构建并部署到 GitHub Pages。
 
 - **构建命令**: `npm run build`
-- **输出目录**: `dist`
+- **输出目录**: `out`

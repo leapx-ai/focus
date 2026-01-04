@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Trophy, Download, Share, X } from 'lucide-preact';
+import { Trophy, Download, Share, X } from 'lucide-react';
 import { clsx } from 'clsx';
+import { useLevel } from '../hooks/useLevel';
+import confetti from 'canvas-confetti';
 
 export function ShareCard({ session, onClose }) {
   const { currentTheme } = useTheme();

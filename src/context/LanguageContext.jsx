@@ -1,5 +1,7 @@
-import { createContext } from 'preact';
-import { useContext, useState, useEffect } from 'preact/hooks';
+'use client';
+
+import { createContext } from 'react';
+import { useContext, useState, useEffect } from 'react';
 
 const translations = {
   zh: {

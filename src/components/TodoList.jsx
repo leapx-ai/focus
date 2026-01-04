@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'preact/hooks';
-import { Plus, Trash2, CheckCircle2, Circle, BarChart3, Calendar, Clock, TrendingUp } from 'lucide-preact';
-import { clsx } from 'clsx';
+import { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
+import { Plus, Trash2, CheckCircle2, Circle, BarChart3, Calendar, Clock, TrendingUp } from 'lucide-react';
+import { clsx } from 'clsx';
+import { format, isSameDay, startOfWeek, endOfWeek, isWithinInterval, parseISO } from 'date-fns';
 
 export function TodoList() {
   const [todos, setTodos] = useState(() => {

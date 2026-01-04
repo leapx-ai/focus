@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'preact/hooks';
-import { Volume2, VolumeX, CloudRain, Wind, Coffee, Zap, Flame, Waves, Music } from 'lucide-preact';
+import { useState, useEffect, useRef } from 'react';
+import { Volume2, VolumeX, CloudRain, Wind, Coffee, Zap, Flame, Waves, Music } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -8,9 +8,13 @@ import { useLanguage } from '../context/LanguageContext';
 const getAudioUrl = (path) => {
   // 移除开头的斜杠（如果有）
   const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-  // 使用 import.meta.env.BASE_URL 确保在不同部署路径下都能正确加载
-  // 如果 BASE_URL 是 ./，则结果为 ./filename.mp3
-  return `${import.meta.env.BASE_URL}${cleanPath}`;
+  
+  // 在Next.js中，使用process.env.NEXT_PUBLIC_BASE_PATH或直接使用相对路径
+  // 如果是GitHub Pages部署，需要加上basePath
+  // 如果是在Vercel或本地开发，通常是根路径
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+  
+  return `${basePath}/${cleanPath}`;
 };
 
 const SOUNDS = [

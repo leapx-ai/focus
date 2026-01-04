@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
-import { Trophy, X, Star, Zap } from 'lucide-preact';
+import { Trophy, X, Star, Zap } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAchievements } from '../hooks/useAchievements';
 import { useLevel } from '../hooks/useLevel';

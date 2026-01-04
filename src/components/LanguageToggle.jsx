@@ -1,5 +1,6 @@
 import { useLanguage } from '../context/LanguageContext';
-import { Globe } from 'lucide-preact';
+import { useTheme } from '../context/ThemeContext';
+import { Globe } from 'lucide-react';
 import { clsx } from 'clsx';
 
 export function LanguageToggle() {

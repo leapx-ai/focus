@@ -1,4 +1,4 @@
-import { Github, Palette } from 'lucide-preact';
+import { Github, Palette } from 'lucide-react';
 import { useTheme, THEMES } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { clsx } from 'clsx';

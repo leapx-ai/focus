@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect } from 'react';
 import { ACHIEVEMENTS, checkAchievements, calculateStreak } from '../utils/achievements';
 
 export function useAchievements() {

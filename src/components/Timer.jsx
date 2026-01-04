@@ -1,10 +1,10 @@
-import { useState, useEffect, useMemo } from 'preact/hooks';
+import { useState, useEffect, useMemo } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { AchievementManager } from './AchievementManager';
 import { ShareCard } from './ShareCard';
 import { clsx } from 'clsx';
-import { RotateCcw, Play, Pause } from 'lucide-preact';
+import { RotateCcw, Play, Pause } from 'lucide-react';
 
 export function Timer() {
   const [timeLeft, setTimeLeft] = useState(25 * 60);

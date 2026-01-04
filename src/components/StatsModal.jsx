@@ -1,7 +1,7 @@
-import { useState } from 'preact/hooks';
+import { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { clsx } from 'clsx';
-import { BarChart3, X } from 'lucide-preact';
+import { BarChart3, X } from 'lucide-react';
 import { StatsPanel } from './StatsPanel';
 
 export function StatsModal() {

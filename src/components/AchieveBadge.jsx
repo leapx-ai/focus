@@ -1,4 +1,6 @@
-import { useEffect } from 'preact/hooks';
+import { useEffect } from 'react';
+import { clsx } from 'clsx';
+import { useTheme } from '../context/ThemeContext';
 import confetti from 'canvas-confetti';
 
 export function AchieveBadge({ achievement, onClose }) {

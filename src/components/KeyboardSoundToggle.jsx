@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
-import { Volume2, VolumeX } from 'lucide-preact';
+import { Volume2, VolumeX } from 'lucide-react';
 import { clsx } from 'clsx';
 import { keyboardSound } from '../utils/sound';
 
